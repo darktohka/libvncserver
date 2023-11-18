@@ -138,7 +138,7 @@ endif(WITH_PNG)
 
 
 if(WITH_SDL)
-  find_package(SDL2)
+  find_package(SDL3)
 endif(WITH_SDL)
 
 if(WITH_GTK)
