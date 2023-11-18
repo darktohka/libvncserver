@@ -79,7 +79,7 @@ if(WITH_LZO)
 endif()
 
 if(WITH_XCB)
-  find_package(X11) # Need CMake 3.24.0 to find XCB libraries. see https://cmake.org/cmake/help/v3.24/module/FindX11.html 
+  find_package(X11) # Need CMake 3.24.0 to find XCB libraries. see https://cmake.org/cmake/help/v3.24/module/FindX11.html
 endif()
 
 if(WITH_JPEG)
@@ -612,13 +612,13 @@ set(LIBVNCCLIENT_EXAMPLES
     ppmtest
 )
 
-if(SDL2_FOUND)
-  include_directories(${SDL2_INCLUDE_DIR})
+if(SDL3_FOUND)
+  include_directories(${SDL3_INCLUDE_DIR})
   set(LIBVNCCLIENT_EXAMPLES
     ${LIBVNCCLIENT_EXAMPLES}
     SDLvncviewer
   )
-endif(SDL2_FOUND)
+endif(SDL3_FOUND)
 
 if(GTK2_FOUND)
   include_directories(${GTK2_INCLUDE_DIRS})
@@ -659,7 +659,7 @@ if(WITH_EXAMPLES)
     add_executable(client_examples_${e} ${LIBVNCCLIEXAMPLE_DIR}/${e}.c ${LIBVNCCLIEXAMPLE_DIR}/${${e}_EXTRA_SOURCES} )
     set_target_properties(client_examples_${e} PROPERTIES OUTPUT_NAME ${e})
     set_target_properties(client_examples_${e} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/examples/client)
-    target_link_libraries(client_examples_${e} vncclient ${CMAKE_THREAD_LIBS_INIT} ${SDL2_LIBRARY} ${GTK2_LIBRARIES} ${FFMPEG_LIBRARIES} ${LIBSSH2_LIBRARY})
+    target_link_libraries(client_examples_${e} vncclient ${CMAKE_THREAD_LIBS_INIT} ${SDL3_LIBRARY} ${GTK2_LIBRARIES} ${FFMPEG_LIBRARIES} ${LIBSSH2_LIBRARY})
   endforeach(e ${LIBVNCCLIENT_EXAMPLES})
 endif(WITH_EXAMPLES)
 
@@ -786,7 +786,7 @@ if(LIBVNCSERVER_INSTALL)
         include/rfb/rfbproto.h
         include/rfb/rfbregion.h
         )
-    
+
     set_property(TARGET vncclient PROPERTY PUBLIC_HEADER ${INSTALL_HEADER_FILES})
     set_property(TARGET vncserver PROPERTY PUBLIC_HEADER ${INSTALL_HEADER_FILES})
     if(WIN32)
@@ -808,14 +808,14 @@ if(LIBVNCSERVER_INSTALL)
             INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
             )
     endif()
-    
+
     # Install cmake configure files
     install(EXPORT LibVNCServerTargets
         NAMESPACE
             "LibVNCServer::"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LibVNCServer"
         )
-    
+
     include(CMakePackageConfigHelpers)
     configure_package_config_file(
       ${PROJECT_SOURCE_DIR}/cmake/Modules/LibVNCServerConfig.cmake.in
@@ -831,8 +831,8 @@ if(LIBVNCSERVER_INSTALL)
         "${CMAKE_BINARY_DIR}/LibVNCServerConfigVersion.cmake"
         "${CMAKE_BINARY_DIR}/LibVNCServerConfig.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LibVNCServer")
-    
-  
+
+
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/libvncserver.pc
         ${CMAKE_CURRENT_BINARY_DIR}/libvncclient.pc
