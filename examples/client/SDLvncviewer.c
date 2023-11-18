@@ -43,12 +43,9 @@ static rfbBool resize(rfbClient* client) {
 		sdlFlags |= SDL_WINDOW_RESIZABLE;
 
 	/* (re)create the surface used as the client's framebuffer */
-	SDL_FreeSurface(rfbClientGetClientData(client, SDL_Init));
-	SDL_Surface* sdl=SDL_CreateRGBSurface(0,
-					      width,
-					      height,
-					      depth,
-					      0,0,0,0);
+	SDL_DestroySurface(rfbClientGetClientData(client, SDL_Init));
+	SDL_Surface* sdl=SDL_CreateSurface(width, height,
+					   SDL_GetPixelFormatEnumForMasks(depth, 0, 0, 0, 0));
 	if(!sdl)
 	    rfbClientErr("resize: error creating surface: %s\n", SDL_GetError());
 
@@ -67,11 +64,7 @@ static rfbBool resize(rfbClient* client) {
 
 	/* create or resize the window */
 	if(!sdlWindow) {
-	    sdlWindow = SDL_CreateWindow(client->desktopName,
-					 SDL_WINDOWPOS_UNDEFINED,
-					 SDL_WINDOWPOS_UNDEFINED,
-					 width,
-					 height,
+	    sdlWindow = SDL_CreateWindow(client->desktopName, width, height,
 					 sdlFlags);
 	    if(!sdlWindow)
 		rfbClientErr("resize: error creating window: %s\n", SDL_GetError());
@@ -81,12 +74,14 @@ static rfbBool resize(rfbClient* client) {
 
 	/* create the renderer if it does not already exist */
 	if(!sdlRenderer) {
-	    sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);
+	    sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL, 0);
 	    if(!sdlRenderer)
 		rfbClientErr("resize: error creating renderer: %s\n", SDL_GetError());
 	    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  /* make the scaled rendering look smoother. */
 	}
-	SDL_RenderSetLogicalSize(sdlRenderer, width, height);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
+	SDL_SetRenderLogicalPresentation(sdlRenderer, width, height,
+					 SDL_LOGICAL_PRESENTATION_LETTERBOX,
+					 SDL_SCALEMODE_LINEAR);  /* this is a departure from the SDL1.2-based version, but more in the sense of a VNC viewer in keeeping aspect ratio */
 
 	/* (re)create the texture that sits in between the surface->pixels and the renderer */
 	if(sdlTexture)
@@ -174,7 +169,7 @@ static rfbKeySym SDL_key2rfbKeySym(SDL_KeyboardEvent* e) {
 	default: break;
 	}
 	/* SDL_TEXTINPUT does not generate characters if ctrl is down, so handle those here */
-        if (k == 0 && sym > 0x0 && sym < 0x100 && e->keysym.mod & KMOD_CTRL)
+        if (k == 0 && sym > 0x0 && sym < 0x100 && e->keysym.mod & SDL_KMOD_CTRL)
                k = sym;
 
 	return k;
@@ -202,7 +197,7 @@ static void update(rfbClient* cl,int x,int y,int w,int h) {
 	/* copy texture to renderer and show */
 	if(SDL_RenderClear(sdlRenderer) < 0)
 	    rfbClientErr("update: failed to clear renderer: %s\n", SDL_GetError());
-	if(SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL) < 0)
+	if(SDL_RenderTexture(sdlRenderer, sdlTexture, NULL, NULL) < 0)
 	    rfbClientErr("update: failed to copy texture to renderer: %s\n", SDL_GetError());
 	SDL_RenderPresent(sdlRenderer);
 }
@@ -292,14 +287,14 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 	switch(e->type) {
 	case SDL_WINDOWEVENT:
 	    switch (e->window.event) {
-	    case SDL_WINDOWEVENT_EXPOSED:
+	    case SDL_EVENT_WINDOW_EXPOSED :
 		SendFramebufferUpdateRequest(cl, 0, 0,
 					cl->width, cl->height, FALSE);
 		break;
-	    case SDL_WINDOWEVENT_RESIZED:
+	    case SDL_EVENT_WINDOW_RESIZED :
 	        SendExtDesktopSize(cl, e->window.data1, e->window.data2);
 	        break;
-	    case SDL_WINDOWEVENT_FOCUS_GAINED:
+	    case SDL_EVENT_WINDOW_FOCUS_GAINED :
                 if (SDL_HasClipboardText()) {
 		        char *text = SDL_GetClipboardText();
 			if(text) {
@@ -310,7 +305,7 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 		}
 
 		break;
-	    case SDL_WINDOWEVENT_FOCUS_LOST:
+	    case SDL_EVENT_WINDOW_FOCUS_LOST :
 		if (rightAltKeyDown) {
 			SendKeyEvent(cl, XK_Alt_R, FALSE);
 			rightAltKeyDown = FALSE;
@@ -324,7 +319,7 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 		break;
 	    }
 	    break;
-	case SDL_MOUSEWHEEL:
+	case SDL_EVENT_MOUSE_WHEEL :
 	{
 	        int steps;
 	        if (viewOnly)
@@ -352,15 +347,15 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 		    }
 		break;
 	}
-	case SDL_MOUSEBUTTONUP:
-	case SDL_MOUSEBUTTONDOWN:
-	case SDL_MOUSEMOTION:
+	case SDL_EVENT_MOUSE_BUTTON_UP :
+	case SDL_EVENT_MOUSE_BUTTON_DOWN :
+	case SDL_EVENT_MOUSE_MOTION :
 	{
 		int state, i;
 		if (viewOnly)
 			break;
 
-		if (e->type == SDL_MOUSEMOTION) {
+		if (e->type == SDL_EVENT_MOUSE_MOTION) {
 			x = e->motion.x;
 			y = e->motion.y;
 			state = e->motion.state;
@@ -372,7 +367,7 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 			for (i = 0; buttonMapping[i].sdl; i++)
 				if (state == buttonMapping[i].sdl) {
 					state = buttonMapping[i].rfb;
-					if (e->type == SDL_MOUSEBUTTONDOWN)
+					if (e->type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 						buttonMask |= state;
 					else
 						buttonMask &= ~state;
@@ -383,25 +378,25 @@ static rfbBool handleSDLEvent(rfbClient *cl, SDL_Event *e)
 		buttonMask &= ~(rfbButton4Mask | rfbButton5Mask);
 		break;
 	}
-	case SDL_KEYUP:
-	case SDL_KEYDOWN:
+	case SDL_EVENT_KEY_UP :
+	case SDL_EVENT_KEY_DOWN :
 		if (viewOnly)
 			break;
 		SendKeyEvent(cl, SDL_key2rfbKeySym(&e->key),
-			e->type == SDL_KEYDOWN ? TRUE : FALSE);
+			e->type == SDL_EVENT_KEY_DOWN ? TRUE : FALSE);
 		if (e->key.keysym.sym == SDLK_RALT)
-			rightAltKeyDown = e->type == SDL_KEYDOWN;
+			rightAltKeyDown = e->type == SDL_EVENT_KEY_DOWN;
 		if (e->key.keysym.sym == SDLK_LALT)
-			leftAltKeyDown = e->type == SDL_KEYDOWN;
+			leftAltKeyDown = e->type == SDL_EVENT_KEY_DOWN;
 		break;
-	case SDL_TEXTINPUT:
+	case SDL_EVENT_TEXT_INPUT :
                 if (viewOnly)
 			break;
 		rfbKeySym sym = utf8char2rfbKeySym(e->text.text);
 		SendKeyEvent(cl, sym, TRUE);
 		SendKeyEvent(cl, sym, FALSE);
                 break;
-	case SDL_QUIT:
+	case SDL_EVENT_QUIT :
                 if(listenLoop)
 		  {
 		    cleanup(cl);
@@ -501,7 +496,7 @@ int main(int argc,char** argv) {
 		}
 	argc = j;
 
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
+	SDL_Init(SDL_INIT_VIDEO);
 	atexit(SDL_Quit);
 	signal(SIGINT, exit);
 
