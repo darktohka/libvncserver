@@ -70,8 +70,10 @@ static rfbBool resize(rfbClient *client) {
   /* create the renderer if it does not already exist */
   if (!sdlRenderer) {
     sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL, 0);
-    if (!sdlRenderer)
+    if (!sdlRenderer) {
       rfbClientErr("resize: error creating renderer: %s\n", SDL_GetError());
+      return;
+    }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,
                 "linear"); /* make the scaled rendering look smoother. */
   }
