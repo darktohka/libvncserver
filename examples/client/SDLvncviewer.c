@@ -42,7 +42,7 @@ static rfbBool resize(rfbClient *client) {
   SDL_Surface *sdl = SDL_CreateSurface(
       width, height, SDL_GetPixelFormatEnumForMasks(depth, 0, 0, 0, 0));
   if (!sdl)
-    rfbClientErr("resize: error creating surface: %s\n", SDL_GetError());
+    rfbClientErr("resize: aerror creating surface: %s\n", SDL_GetError());
 
   rfbClientSetClientData(client, SDL_Init, sdl);
   client->width = sdl->pitch / (depth / 8);
@@ -660,6 +660,7 @@ SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     }
 
     printf("start poll\n");
+    return;
 
     while (1) {
       if (SDL_PollEvent(&e)) {
