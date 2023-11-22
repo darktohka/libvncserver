@@ -52,6 +52,7 @@ static rfbBool resize(rfbClient *client) {
   client->format.redShift = sdl->format->Rshift;
   client->format.greenShift = sdl->format->Gshift;
   client->format.blueShift = sdl->format->Bshift;
+
   client->format.redMax = sdl->format->Rmask >> client->format.redShift;
   client->format.greenMax = sdl->format->Gmask >> client->format.greenShift;
   client->format.blueMax = sdl->format->Bmask >> client->format.blueShift;
@@ -579,6 +580,29 @@ static rfbCredential *get_credential(rfbClient *cl, int credentialType) {
 #endif
 
 int main(int argc, char **argv) {
+  printf("Start\n");
+  printf("Num video drivers: %d\n", SDL_GetNumVideoDrivers());
+  for (int i = 0; i < SDL_GetNumVideoDrivers(); i++) {
+    printf("Video driver: %s\n", SDL_GetVideoDriver( i ) );
+  }
+
+  for( int i = 0; i < SDL_GetNumVideoDrivers(); ++i )
+  {
+//     printf("index %d init: %d\n", i, SDL_VideoInit( SDL_GetVideoDriver(i)));
+//     SDL_VideoQuit();
+  }
+
+
+    printf("SDL_RENDER_DRIVER available:\n");
+    for( int i = 0; i < SDL_GetNumRenderDrivers(); ++i )
+    {
+        printf("render driver name: %s\n", SDL_GetRenderDriver(i));
+    }
+
+SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+
+
+
   rfbClient *cl;
   int i, j;
   SDL_Event e;
@@ -605,7 +629,9 @@ int main(int argc, char **argv) {
     }
   argc = j;
 
+  printf("sdl init begin\n");
   SDL_Init(SDL_INIT_VIDEO);
+  printf("current video driver: %s\n", SDL_GetCurrentVideoDriver());
   atexit(SDL_Quit);
   signal(SIGINT, exit);
 
@@ -630,6 +656,8 @@ int main(int argc, char **argv) {
       cleanup(cl);
       break;
     }
+
+    printf("start poll\n");
 
     while (1) {
       if (SDL_PollEvent(&e)) {
