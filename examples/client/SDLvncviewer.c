@@ -656,7 +656,6 @@ int main(int argc, char **argv) {
     }
 
     printf("start poll\n");
-    return;
 
     while (1) {
       if (SDL_PollEvent(&e)) {
