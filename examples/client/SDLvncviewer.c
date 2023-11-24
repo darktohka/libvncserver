@@ -72,7 +72,7 @@ static rfbBool resize(rfbClient *client) {
     sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL, 0);
     if (!sdlRenderer) {
       rfbClientErr("resize: error creating renderer: %s\n", SDL_GetError());
-      return;
+      return FALSE;
     }
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,
                 "linear"); /* make the scaled rendering look smoother. */
@@ -582,7 +582,7 @@ static rfbCredential *get_credential(rfbClient *cl, int credentialType) {
 #endif
 
 int main(int argc, char **argv) {
-  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_WARN);
+  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
   printf("Start\n");
   printf("Num video drivers: %d\n", SDL_GetNumVideoDrivers());
   for (int i = 0; i < SDL_GetNumVideoDrivers(); i++) {
@@ -599,7 +599,7 @@ int main(int argc, char **argv) {
     printf("render driver name: %s\n", SDL_GetRenderDriver(i));
   }
 
-  SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+//  SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
 
   rfbClient *cl;
   int i, j;
