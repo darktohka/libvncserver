@@ -579,25 +579,6 @@ static rfbCredential *get_credential(rfbClient *cl, int credentialType) {
 #endif
 
 int main(int argc, char **argv) {
-  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
-  printf("Start\n");
-  printf("Num video drivers: %d\n", SDL_GetNumVideoDrivers());
-  for (int i = 0; i < SDL_GetNumVideoDrivers(); i++) {
-    printf("Video driver: %s\n", SDL_GetVideoDriver(i));
-  }
-
-  for (int i = 0; i < SDL_GetNumVideoDrivers(); ++i) {
-    //     printf("index %d init: %d\n", i, SDL_VideoInit(
-    //     SDL_GetVideoDriver(i))); SDL_VideoQuit();
-  }
-
-  printf("SDL_RENDER_DRIVER available:\n");
-  for (int i = 0; i < SDL_GetNumRenderDrivers(); ++i) {
-    printf("render driver name: %s\n", SDL_GetRenderDriver(i));
-  }
-
-//  SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
-
   rfbClient *cl;
   int i, j;
   SDL_Event e;
