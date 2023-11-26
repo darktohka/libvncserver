@@ -21,7 +21,7 @@ struct {
                    {0b00001111, 4}, {0b00000111, 3}, {0, 0}};
 
 static int enableResizable = 1, viewOnly, listenLoop, buttonMask;
-int sdlFlags;
+int sdlFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
 SDL_Texture *sdlTexture;
 SDL_Renderer *sdlRenderer;
 SDL_Window *sdlWindow;
@@ -33,9 +33,6 @@ static int rightAltKeyDown, leftAltKeyDown;
 static rfbBool resize(rfbClient *client) {
   int width = client->width, height = client->height,
       depth = client->format.bitsPerPixel;
-
-  if (enableResizable)
-    sdlFlags |= SDL_WINDOW_RESIZABLE;
 
   /* (re)create the surface used as the client's framebuffer */
   SDL_DestroySurface(rfbClientGetClientData(client, SDL_Init));
@@ -69,7 +66,7 @@ static rfbBool resize(rfbClient *client) {
 
   /* create the renderer if it does not already exist */
   if (!sdlRenderer) {
-    sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL, 0);
+    sdlRenderer = SDL_CreateRenderer(sdlWindow, NULL, SDL_RENDERER_ACCELERATED);
     if (!sdlRenderer) {
       rfbClientErr("resize: error creating renderer: %s\n", SDL_GetError());
       return FALSE;
